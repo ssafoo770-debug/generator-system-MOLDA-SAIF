@@ -12,7 +12,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -44,7 +44,7 @@
         }
         input {
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
         }
         button {
             cursor: pointer;
@@ -59,6 +59,10 @@
         .btn-success:hover { background-color: #218838; }
         .btn-danger { background-color: #dc3545; }
         .btn-danger:hover { background-color: #c82333; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-warning:hover { background-color: #e0a800; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; }
         
         .tables-container {
             display: flex;
@@ -67,7 +71,7 @@
         }
         .table-box {
             flex: 1;
-            min-width: 300px;
+            min-width: 340px;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -85,6 +89,37 @@
             font-size: 13px;
         }
         th { background-color: #f1f3f5; }
+        
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .reset-box {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #dc3545;
+        }
+
+        /* Modal / نافذة التعديل */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
     </style>
 </head>
 <body>
@@ -112,7 +147,7 @@
             <input type="text" id="custBoard" placeholder="رقم البورد">
             <input type="text" id="custBreaker" placeholder="رقم الجوزة">
             <input type="number" id="custAmperes" placeholder="عدد الأمبيرات">
-            <input type="number" id="custAmount" placeholder="المبلغ المطلوبة">
+            <input type="number" id="custAmount" placeholder="المبلغ المطلوب">
             <button class="btn-primary" onclick="addCustomer()">إضافة</button>
         </div>
     </div>
@@ -128,7 +163,7 @@
                         <th>الاسم</th>
                         <th>الأمبيرات</th>
                         <th>المبلغ</th>
-                        <th>إجراء</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="unpaidTable"></tbody>
@@ -144,11 +179,38 @@
                         <th>الاسم</th>
                         <th>الأمبيرات</th>
                         <th>المبلغ</th>
-                        <th>الحالة</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="paidTable"></tbody>
             </table>
+
+            <!-- زر تصفير جميع المسددين -->
+            <div class="reset-box">
+                <button class="btn-danger" style="padding: 10px 20px; font-size: 15px;" onclick="resetAllPaid()">
+                    🔄 تصفير الشهر (إعادة جميع المسددين إلى غير مسددين)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة التعديل (Modal) -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>✏️️ تعديل بيانات المشترك</h3>
+        <input type="hidden" id="editCustId">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label>اسم المشترك: <input type="text" id="editName"></label>
+            <label>رقم الهاتف: <input type="text" id="editPhone"></label>
+            <label>رقم البورد: <input type="text" id="editBoard"></label>
+            <label>رقم الجوزة: <input type="text" id="editBreaker"></label>
+            <label>عدد الأمبيرات: <input type="number" id="editAmperes"></label>
+            <label>المبلغ المطلوب: <input type="number" id="editAmount"></label>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-success" style="flex: 1;" onclick="saveCustomerEdit()">حفظ التعديلات 💾</button>
+                <button class="btn-secondary" style="flex: 1;" onclick="closeEditModal()">إلغاء ❌</button>
+            </div>
         </div>
     </div>
 </div>
@@ -242,8 +304,9 @@
                         <td>${c.name}</td>
                         <td>${c.amperes || '-'}</td>
                         <td>${c.amount}</td>
-                        <td>
+                        <td class="action-btns">
                             <button class="btn-success" onclick="markAsPaid(${c.id})">تسديد 💳</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
                     </tr>
@@ -254,7 +317,11 @@
                         <td>${c.name}</td>
                         <td>${c.amperes || '-'}</td>
                         <td>${c.amount}</td>
-                        <td><span style="color:green; font-weight:bold;">تم التسديد ✅</span></td>
+                        <td class="action-btns">
+                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء التسديد ↩️</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
+                            <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
+                        </td>
                     </tr>
                 `;
             }
@@ -269,6 +336,76 @@
             saveCustomers();
             renderTables();
             sendTelegramNotification(cust);
+        }
+    }
+
+    // إلغاء التسديد لمشترك واحد (إعادته إلى قائمة غير المسددين)
+    function markAsUnpaid(id) {
+        const cust = customers.find(c => c.id === id);
+        if(cust) {
+            cust.paid = false;
+            saveCustomers();
+            renderTables();
+        }
+    }
+
+    // تصفير الشهر بالكامل (إعادة جميع المسددين إلى غير مسددين)
+    function resetAllPaid() {
+        const paidCount = customers.filter(c => c.paid).length;
+        if(paidCount === 0) {
+            alert('لا يوجد مشتركين في قائمة المسددين لتصفيرهم!');
+            return;
+        }
+
+        if(confirm(`هل أنت تأكد من تصفير الشهر؟ سيتم تحويل ${paidCount} مشتركين من قائمة المسددين إلى قائمة غير المسددين لتبدأ شهراً جديداً.`)) {
+            customers.forEach(c => c.paid = false);
+            saveCustomers();
+            renderTables();
+            alert('تم تصفير القائمة بنجاح وإعادة جميع المشتركين إلى قائمة غير المسددين!');
+        }
+    }
+
+    // فتح نافذة التعديل وتعبئة البيانات
+    function openEditModal(id) {
+        const cust = customers.find(c => c.id === id);
+        if(cust) {
+            document.getElementById('editCustId').value = cust.id;
+            document.getElementById('editName').value = cust.name || '';
+            document.getElementById('editPhone').value = cust.phone || '';
+            document.getElementById('editBoard').value = cust.board || '';
+            document.getElementById('editBreaker').value = cust.breaker || '';
+            document.getElementById('editAmperes').value = cust.amperes || '';
+            document.getElementById('editAmount').value = cust.amount || '';
+            document.getElementById('editModal').style.display = 'flex';
+        }
+    }
+
+    // إغلاق نافذة التعديل
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // حفظ التعديلات على المشترك
+    function saveCustomerEdit() {
+        const id = parseInt(document.getElementById('editCustId').value);
+        const cust = customers.find(c => c.id === id);
+
+        if(cust) {
+            cust.name = document.getElementById('editName').value.trim();
+            cust.phone = document.getElementById('editPhone').value.trim();
+            cust.board = document.getElementById('editBoard').value.trim();
+            cust.breaker = document.getElementById('editBreaker').value.trim();
+            cust.amperes = document.getElementById('editAmperes').value.trim();
+            cust.amount = document.getElementById('editAmount').value.trim();
+
+            if(!cust.name || !cust.amount) {
+                alert('الاسم والمبلغ مطلوبان!');
+                return;
+            }
+
+            saveCustomers();
+            renderTables();
+            closeEditModal();
         }
     }
 
