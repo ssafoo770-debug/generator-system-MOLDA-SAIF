@@ -37,7 +37,6 @@
             padding: 20px;
         }
 
-        /* شاشة تسجيل الدخول */
         .login-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -69,7 +68,7 @@
             border-radius: 20px;
             box-shadow: var(--shadow-card);
             border: 1px solid var(--border-color);
-            display: none; /* مخفي لحين تسجيل الدخول */
+            display: none;
         }
 
         .header-top {
@@ -286,6 +285,11 @@
         </div>
     </div>
 
+    <!-- كارت إحصائية اليوم -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(1, 181, 116, 0.1) 0%, rgba(67, 24, 255, 0.1) 100%);">
+        <h3 style="color: #01B574;">📊 مجموع الدفع الكلي اليوم: <span id="todayTotalDisplay" style="font-size: 22px; font-weight: bold; color: #4318FF;">0</span> دينار</h3>
+    </div>
+
     <!-- قسم إدارة المستخدمين (للمدير فقط) -->
     <div id="adminUserSection" class="card" style="display: none; border: 2px solid #4318FF;">
         <h3>👑 إدارة حسابات المستخدمين (خاص بالمدير)</h3>
@@ -448,11 +452,11 @@
 </div>
 
 <script>
-    // تهيئة الحسابات مع وجود حساب أدمن رئيسي افتراضي
     const defaultUsers = [{ username: 'admin', password: '123', role: 'admin' }];
     let systemUsers = JSON.parse(localStorage.getItem('generator_users')) || defaultUsers;
     let currentUser = JSON.parse(sessionStorage.getItem('generator_current_user')) || null;
     let customers = JSON.parse(localStorage.getItem('generator_customers')) || [];
+    let paymentsHistory = JSON.parse(localStorage.getItem('generator_payments_history')) || [];
 
     window.onload = function() {
         saveSystemUsers();
@@ -465,11 +469,31 @@
         }
     };
 
+    function getTodayString() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getTodayTotal() {
+        const todayStr = getTodayString();
+        return paymentsHistory
+            .filter(p => p.date === todayStr)
+            .reduce((sum, p) => sum + p.amount, 0);
+    }
+
+    function updateTodayTotalDisplay() {
+        const total = getTodayTotal();
+        const display = document.getElementById('todayTotalDisplay');
+        if(display) display.innerText = total.toLocaleString();
+    }
+
     function saveSystemUsers() {
         localStorage.setItem('generator_users', JSON.stringify(systemUsers));
     }
 
-    // تسديد وتسجيل الدخول
     function handleLogin() {
         const uInput = document.getElementById('loginUsername').value.trim();
         const pInput = document.getElementById('loginPassword').value.trim();
@@ -501,7 +525,6 @@
         document.getElementById('mainContainer').style.display = 'block';
         document.getElementById('userInfo').innerText = `👤 المستخدم: ${currentUser.username} (${currentUser.role === 'admin' ? 'مدير' : 'موظف'})`;
 
-        // إظهار قسم الإدارة إذا كان مدير فقط
         if(currentUser.role === 'admin') {
             document.getElementById('adminUserSection').style.display = 'block';
             document.getElementById('resetBoxSection').style.display = 'block';
@@ -513,9 +536,9 @@
 
         loadTelegramSettings();
         renderTables();
+        updateTodayTotalDisplay();
     }
 
-    // إضافة أو تحديث مستخدم (للمدير)
     function addUser() {
         if(currentUser?.role !== 'admin') return;
 
@@ -718,7 +741,7 @@
                         <td>${c.amperes || '-'}</td>
                         <td style="color:#01B574; font-weight:bold;">${c.paidAmount}</td>
                         <td class="action-btns">
-                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️</button>
+                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️️</button>
                             <button class="btn-warning" onclick="openEditModal(${c.id})">✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
@@ -750,7 +773,7 @@
         const cust = customers.find(c => c.id === id);
         const enteredPaid = parseFloat(document.getElementById('paidAmountInput').value) || 0;
 
-        if(!cust) return;
+        if(!cust || enteredPaid <= 0) return;
 
         const totalRequired = (parseFloat(cust.amount) || 0) + (parseFloat(cust.previousDebt) || 0);
         const previousPaid = parseFloat(cust.paidAmount) || 0;
@@ -764,8 +787,18 @@
             cust.status = 'partial';
         }
 
+        // إضافة الدفعة إلى سجل المدفوعات اليومي
+        paymentsHistory.push({
+            date: getTodayString(),
+            amount: enteredPaid,
+            custId: cust.id,
+            timestamp: Date.now()
+        });
+        localStorage.setItem('generator_payments_history', JSON.stringify(paymentsHistory));
+
         saveCustomers();
         renderTables();
+        updateTodayTotalDisplay();
         closePayModal();
 
         sendTelegramNotification(cust, enteredPaid, (totalRequired - newTotalPaid));
@@ -857,6 +890,7 @@
         if(!token || !chatId) return;
 
         let statusText = remaining <= 0 ? "✅ *تسديد كامل*" : "⚠️ *تسديد جزئي (باقي عليه حساب)*";
+        const todayTotal = getTodayTotal();
 
         const message = `
 ${statusText}
@@ -865,9 +899,11 @@ ${statusText}
 📞 *الهاتف:* ${cust.phone || 'غير محدد'}
 🔢 *البورد/الجوزة:* ${cust.board || '-'}/${cust.breaker || '-'}
 ⚡ *عدد الأمبيرات:* ${cust.amperes || '-'}
-💰 *المبلغ الواصل الآن:* ${recentlyPaid} دينار
-إجمالي المدفوع: ${cust.paidAmount} دينار
-📌 *المتبقي عليه:* ${remaining > 0 ? remaining + ' دينار' : 'لا يوجد (خالي الطرف)'}
+💰 *المبلغ الواصل الآن:* ${recentlyPaid.toLocaleString()} دينار
+💳 *إجمالي المدفوع لهذا الشخص:* ${cust.paidAmount.toLocaleString()} دينار
+📌 *المتبقي عليه:* ${remaining > 0 ? remaining.toLocaleString() + ' دينار' : 'لا يوجد (خالي الطرف)'}
+
+💵 *مجموع المبالغ المسددة اليوم:* ${todayTotal.toLocaleString()} دينار
         `;
 
         fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
