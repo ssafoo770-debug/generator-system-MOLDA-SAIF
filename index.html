@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة مشتركي المولدة</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --bg: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1, h2 { text-align: center; color: var(--primary); }
+        
+        /* إعدادات التليجرام */
+        .config-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .config-card input { width: calc(50% - 12px); padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* نموذج إضافة مشترك */
+        .form-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+        .form-grid input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-add { background-color: var(--accent); margin-top: 10px; width: 100%; }
+        .btn-reset { background-color: var(--warning); color: #333; float: left; font-size: 1rem; }
+        
+        /* أعمدة المشتركين */
+        .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 768px) { .columns-container { grid-template-columns: 1fr; } }
+        
+        .column { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .column-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* كارت الزبون */
+        .customer-card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; margin-top: 10px; background: #fafafa; }
+        .customer-info { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9rem; }
+        .customer-actions { margin-top: 10px; display: flex; gap: 5px; }
+        .btn-pay { background-color: var(--accent); flex: 1; }
+        .btn-unpay { background-color: #e67e22; flex: 1; }
+        .btn-delete { background-color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚡ نظام إدارة مشتركي المولدة</h1>
+
+    <!-- إعدادات ربط البوت -->
+    <div class="config-card">
+        <h3>🤖 إعدادات التليجرام (تربط مرة واحدة فقط)</h3>
+        <input type="text" id="botToken" placeholder="Bot Token (توكن البوت)">
+        <input type="text" id="chatId" placeholder="Chat ID (معرف الشات أو القناة)">
+        <button class="btn" style="background:#3498db;" onclick="saveConfig()">حفظ الإعدادات</button>
+    </div>
+
+    <!-- نموذج الإضافة -->
+    <div class="form-card">
+        <h2>إضافة مشترك جديد</h2>
+        <form id="addCustomerForm" onsubmit="addCustomer(event)">
+            <div class="form-grid">
+                <input type="text" id="name" placeholder="اسم المشترك" required>
+                <input type="tel" id="phone" placeholder="رقم الهاتف" required>
+                <input type="text" id="boardNum" placeholder="رقم البورد" required>
+                <input type="text" id="fuseNum" placeholder="رقم الجوزة" required>
+                <input type="number" id="amperes" placeholder="عدد الأمبيريات" required>
+                <input type="number" id="price" placeholder="السعر المطلوب (د.ع)" required>
+            </div>
+            <button type="submit" class="btn btn-add">➕ إضافة المشترك</button>
+        </form>
+    </div>
+
+    <!-- زر تصفير الشهر -->
+    <div style="overflow: hidden; margin-bottom: 10px;">
+        <button class="btn btn-reset" onclick="resetMonth()">🔄 تصفير الشهر (إرجاع الجميع لغير مسددين)</button>
+    </div>
+
+    <!-- قائمة العرض -->
+    <div class="columns-container">
+        <!-- الزبائن غير المسددين -->
+        <div class="column">
+            <div class="column-header">
+                <h3 style="color: var(--danger);">❌ غير المسددين (<span id="unpaidCount">0</span>)</h3>
+            </div>
+            <div id="unpaidList"></div>
+        </div>
+
+        <!-- الزبائن المسددين -->
+        <div class="column">
+            <div class="column-header">
+                <h3 style="color: var(--accent);">✅ المسددين (<span id="paidCount">0</span>)</h3>
+            </div>
+            <div id="paidList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let customers = JSON.parse(localStorage.getItem('generator_customers')) || [];
+    let telegramConfig = JSON.parse(localStorage.getItem('telegram_config')) || { token: '', chatId: '' };
+
+    document.getElementById('botToken').value = telegramConfig.token;
+    document.getElementById('chatId').value = telegramConfig.chatId;
+
+    function saveConfig() {
+        telegramConfig.token = document.getElementById('botToken').value.trim();
+        telegramConfig.chatId = document.getElementById('chatId').value.trim();
+        localStorage.setItem('telegram_config', JSON.stringify(telegramConfig));
+        alert('تم حفظ إعدادات التليجرام بنجاح!');
+    }
+
+    function saveData() {
+        localStorage.setItem('generator_customers', JSON.stringify(customers));
+        render();
+    }
+
+    function addCustomer(e) {
+        e.preventDefault();
+        const newCustomer = {
+            id: Date.now(),
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            boardNum: document.getElementById('boardNum').value,
+            fuseNum: document.getElementById('fuseNum').value,
+            amperes: document.getElementById('amperes').value,
+            price: document.getElementById('price').value,
+            isPaid: false
+        };
+        customers.push(newCustomer);
+        saveData();
+        document.getElementById('addCustomerForm').reset();
+    }
+
+    function toggleStatus(id) {
+        const customer = customers.find(c => c.id === id);
+        if (customer) {
+            customer.isPaid = !customer.isPaid;
+            if (customer.isPaid) {
+                sendTelegramNotification(customer);
+            }
+            saveData();
+        }
+    }
+
+    function deleteCustomer(id) {
+        if (confirm('هل أنت تأكد من حذف هذا المشترك؟')) {
+            customers = customers.filter(c => c.id !== id);
+            saveData();
+        }
+    }
+
+    function resetMonth() {
+        if (confirm('هل تريد تصفير الشهر وإرجاع جميع المسددين إلى قائمة غير المسددين؟')) {
+            customers.forEach(c => c.isPaid = false);
+            saveData();
+        }
+    }
+
+    function sendTelegramNotification(customer) {
+        if (!telegramConfig.token || !telegramConfig.chatId) {
+            alert('يرجى ضبط إعدادات بوت التليجرام أولاً لتصلك الرسائل!');
+            return;
+        }
+
+        const message = `✅ *تم تسديد اشتراك مولدة* \n\n` +
+            `👤 *الزبون:* ${customer.name}\n` +
+            `📞 *الهاتف:* ${customer.phone}\n` +
+            `🔢 *رقم البورد:* ${customer.boardNum}\n` +
+            `🔌 *رقم الجوزة:* ${customer.fuseNum}\n` +
+            `⚡ *عدد الأمبيرات:* ${customer.amperes} أمبير\n` +
+            `💰 *المبلغ المسدد:* ${customer.price} د.ع`;
+
+        const url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Content-Type': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: telegramConfig.chatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        }).catch(err => console.error('خطأ في إرسال التليجرام:', err));
+    }
+
+    function render() {
+        const unpaidList = document.getElementById('unpaidList');
+        const paidList = document.getElementById('paidList');
+        
+        unpaidList.innerHTML = '';
+        paidList.innerHTML = '';
+
+        let unpaidCount = 0;
+        let paidCount = 0;
+
+        customers.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'customer-card';
+            card.innerHTML = `
+                <h4>${c.name}</h4>
+                <div class="customer-info">
+                    <span>📞 الهاتف: ${c.phone}</span>
+                    <span>🔢 البورد: ${c.boardNum}</span>
+                    <span>🔌 الجوزة: ${c.fuseNum}</span>
+                    <span>⚡ الأمبيرية: ${c.amperes}</span>
+                    <span>💰 المبلغ: ${c.price} د.ع</span>
+                </div>
+                <div class="customer-actions">
+                    <button class="btn ${c.isPaid ? 'btn-unpay' : 'btn-pay'}" onclick="toggleStatus(${c.id})">
+                        ${c.isPaid ? 'إعادة لغير مسدد' : 'تحويل إلى مسدد 💳'}
+                    </button>
+                    <button class="btn btn-delete" onclick="deleteCustomer(${c.id})">حذف</button>
+                </div>
+            `;
+
+            if (c.isPaid) {
+                paidList.appendChild(card);
+                paidCount++;
+            } else {
+                unpaidList.appendChild(card);
+                unpaidCount++;
+            }
+        });
+
+        document.getElementById('unpaidCount').innerText = unpaidCount;
+        document.getElementById('paidCount').innerText = paidCount;
+    }
+
+    render();
+</script>
+</body>
+</html>
