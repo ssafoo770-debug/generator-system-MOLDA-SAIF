@@ -77,7 +77,7 @@
             border: 1px solid var(--border-color);
             padding: 20px;
             border-radius: 16px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             box-shadow: var(--shadow-flat);
         }
 
@@ -103,6 +103,20 @@
         input:focus {
             border-color: #4318ff;
             box-shadow: 0 0 0 3px rgba(67, 24, 255, 0.15);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-flat);
+            border: 1px solid var(--border-color);
         }
 
         button {
@@ -247,6 +261,11 @@
         </div>
     </div>
 
+    <!-- شريط البحث السريع -->
+    <div class="search-box">
+        <input type="text" id="searchInput" oninput="renderTables()" placeholder="🔍 ابحث هنا عن اسم المشترك، رقم البورد، أو الجوزة...">
+    </div>
+
     <!-- جداول المشتركين -->
     <div class="tables-container">
         <!-- ❌ غير المسددين -->
@@ -258,7 +277,7 @@
                         <th>الاسم</th>
                         <th>البورد</th>
                         <th>الجوزة</th>
-                        <th>أقنية</th>
+                        <th>عدد الأمبيرات</th>
                         <th>المطلوب</th>
                         <th>إجراءات</th>
                     </tr>
@@ -293,7 +312,7 @@
                         <th>الاسم</th>
                         <th>البورد</th>
                         <th>الجوزة</th>
-                        <th>أقنية</th>
+                        <th>عدد الأمبيرات</th>
                         <th>المسدد</th>
                         <th>إجراءات</th>
                     </tr>
@@ -448,12 +467,22 @@
         const unpaidTable = document.getElementById('unpaidTable');
         const partialTable = document.getElementById('partialTable');
         const paidTable = document.getElementById('paidTable');
+        const searchQuery = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
 
         unpaidTable.innerHTML = '';
         partialTable.innerHTML = '';
         paidTable.innerHTML = '';
 
         customers.forEach(c => {
+            // تصفية البحث بالاسم أو البورد أو الجوزة
+            const matchName = (c.name || '').toLowerCase().includes(searchQuery);
+            const matchBoard = (c.board || '').toLowerCase().includes(searchQuery);
+            const matchBreaker = (c.breaker || '').toLowerCase().includes(searchQuery);
+
+            if (searchQuery && !matchName && !matchBoard && !matchBreaker) {
+                return; // تجريد العنصر إذا لم يطابق البحث
+            }
+
             const totalRequired = (parseFloat(c.amount) || 0) + (parseFloat(c.previousDebt) || 0);
             const remaining = totalRequired - (parseFloat(c.paidAmount) || 0);
 
