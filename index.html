@@ -741,7 +741,7 @@
                         <td>${c.amperes || '-'}</td>
                         <td style="color:#01B574; font-weight:bold;">${c.paidAmount}</td>
                         <td class="action-btns">
-                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️️</button>
+                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️</button>
                             <button class="btn-warning" onclick="openEditModal(${c.id})">✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
@@ -787,7 +787,6 @@
             cust.status = 'partial';
         }
 
-        // إضافة الدفعة إلى سجل المدفوعات اليومي
         paymentsHistory.push({
             date: getTodayString(),
             amount: enteredPaid,
@@ -804,13 +803,26 @@
         sendTelegramNotification(cust, enteredPaid, (totalRequired - newTotalPaid));
     }
 
+    // إلغاء التسديد وإرجاعه لقائمة غير المسددين + إرسال إشعار بالتليجرام باسم المستخدم
     function markAsUnpaid(id) {
         const cust = customers.find(c => c.id === id);
         if(cust) {
+            if(!confirm(`هل أنت تأكد من إلغاء تسديد المشترك (${cust.name}) وإعادته لغير المسددين؟`)) return;
+
+            const cancelledAmount = cust.paidAmount;
             cust.status = 'unpaid';
             cust.paidAmount = 0;
+
+            // خفض المبلغ من سجل اليوم إذا كان مسدداً اليوم
+            const todayStr = getTodayString();
+            paymentsHistory = paymentsHistory.filter(p => !(p.custId === cust.id && p.date === todayStr));
+            localStorage.setItem('generator_payments_history', JSON.stringify(paymentsHistory));
+
             saveCustomers();
             renderTables();
+            updateTodayTotalDisplay();
+
+            sendCancellationNotification(cust, cancelledAmount);
         }
     }
 
@@ -891,6 +903,7 @@
 
         let statusText = remaining <= 0 ? "✅ *تسديد كامل*" : "⚠️ *تسديد جزئي (باقي عليه حساب)*";
         const todayTotal = getTodayTotal();
+        const currentOperator = currentUser ? currentUser.username : 'غير معروف';
 
         const message = `
 ${statusText}
@@ -903,7 +916,41 @@ ${statusText}
 💳 *إجمالي المدفوع لهذا الشخص:* ${cust.paidAmount.toLocaleString()} دينار
 📌 *المتبقي عليه:* ${remaining > 0 ? remaining.toLocaleString() + ' دينار' : 'لا يوجد (خالي الطرف)'}
 
+👨‍💼 *الموظف المسدد:* ${currentOperator}
 💵 *مجموع المبالغ المسددة اليوم:* ${todayTotal.toLocaleString()} دينار
+        `;
+
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+    }
+
+    // إرسال إشعار التليجرام عند إلغاء التسديد
+    function sendCancellationNotification(cust, cancelledAmount) {
+        const token = localStorage.getItem('tg_bot_token');
+        const chatId = localStorage.getItem('tg_chat_id');
+
+        if(!token || !chatId) return;
+
+        const todayTotal = getTodayTotal();
+        const currentOperator = currentUser ? currentUser.username : 'غير معروف';
+
+        const message = `
+🚨 *إلغاء تسديد مشترك!*
+
+👤 *الاسم:* ${cust.name}
+🔢 *البورد/الجوزة:* ${cust.board || '-'}/${cust.breaker || '-'}
+❌ *المبلغ الملتغى:* ${cancelledAmount.toLocaleString()} دينار
+↩️ *الحالة:* تم تحويله إلى قائمة غير المسددين
+
+👨‍💼 *قام بالإلغاء الموظف:* ${currentOperator}
+💵 *مجموع المقبوضات اليوم بعد التعديل:* ${todayTotal.toLocaleString()} دينار
         `;
 
         fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
