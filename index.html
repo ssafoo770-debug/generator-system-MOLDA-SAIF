@@ -9,7 +9,6 @@
             --bg-color: #eef2f7;
             --card-bg: #ffffff;
             --text-color: #2b3674;
-            --text-muted: #a3edba;
             --border-color: #e0e5f2;
             --shadow-flat: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
             --shadow-card: 0px 18px 40px rgba(112, 144, 176, 0.12);
@@ -39,7 +38,7 @@
         }
 
         .container {
-            max-width: 1250px;
+            max-width: 1350px;
             margin: auto;
             background: var(--card-bg);
             padding: 25px;
@@ -98,7 +97,7 @@
             color: var(--text-color);
             outline: none;
             flex: 1;
-            min-width: 140px;
+            min-width: 130px;
         }
 
         input:focus {
@@ -107,10 +106,10 @@
         }
 
         button {
-            padding: 12px 18px;
+            padding: 10px 14px;
             border: none;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             color: #fff;
@@ -134,7 +133,7 @@
 
         .table-box {
             flex: 1;
-            min-width: 340px;
+            min-width: 380px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
@@ -155,9 +154,9 @@
         }
 
         th, td {
-            padding: 12px 10px;
+            padding: 10px 6px;
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             border-bottom: 1px solid var(--border-color);
         }
 
@@ -171,7 +170,7 @@
 
         .action-btns {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -202,6 +201,14 @@
             width: 90%;
             max-width: 480px;
             box-shadow: var(--shadow-card);
+        }
+
+        .badge-info {
+            background-color: var(--table-header);
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-weight: bold;
+            border: 1px solid var(--border-color);
         }
     </style>
 </head>
@@ -249,8 +256,10 @@
                 <thead>
                     <tr>
                         <th>الاسم</th>
-                        <th>الأمبيرات</th>
-                        <th>المبلغ المطلوب</th>
+                        <th>البورد</th>
+                        <th>الجوزة</th>
+                        <th>أقنية</th>
+                        <th>المطلوب</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
@@ -265,6 +274,7 @@
                 <thead>
                     <tr>
                         <th>الاسم</th>
+                        <th>البورد/الجوزة</th>
                         <th>الواصل</th>
                         <th>المتبقي</th>
                         <th>إجراءات</th>
@@ -281,8 +291,10 @@
                 <thead>
                     <tr>
                         <th>الاسم</th>
-                        <th>الأمبيرات</th>
-                        <th>المبلغ المسدد</th>
+                        <th>البورد</th>
+                        <th>الجوزة</th>
+                        <th>أقنية</th>
+                        <th>المسدد</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
@@ -348,7 +360,6 @@
         renderTables();
     };
 
-    // إدارة الثيم (فاتح / داكن)
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -447,15 +458,17 @@
             const remaining = totalRequired - (parseFloat(c.paidAmount) || 0);
 
             if(c.status === 'unpaid') {
-                let debtText = c.previousDebt > 0 ? `<br><small style="color:#EE5D50;">(ديون سابقة: ${c.previousDebt})</small>` : '';
+                let debtText = c.previousDebt > 0 ? `<br><small style="color:#EE5D50;">(+دين: ${c.previousDebt})</small>` : '';
                 unpaidTable.innerHTML += `
                     <tr>
                         <td><b>${c.name}</b></td>
+                        <td><span class="badge-info">${c.board || '-'}</span></td>
+                        <td><span class="badge-info">${c.breaker || '-'}</span></td>
                         <td>${c.amperes || '-'}</td>
                         <td><b>${totalRequired}</b>${debtText}</td>
                         <td class="action-btns">
                             <button class="btn-success" onclick="openPayModal(${c.id})">تسديد 💳</button>
-                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
                     </tr>
@@ -464,11 +477,12 @@
                 partialTable.innerHTML += `
                     <tr>
                         <td><b>${c.name}</b></td>
+                        <td><span class="badge-info">${c.board || '-'}/${c.breaker || '-'}</span></td>
                         <td style="color:#01B574; font-weight:bold;">${c.paidAmount}</td>
                         <td style="color:#EE5D50; font-weight:bold;">${remaining}</td>
                         <td class="action-btns">
-                            <button class="btn-success" onclick="openPayModal(${c.id})">دفع المتبقي 💳</button>
-                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
+                            <button class="btn-success" onclick="openPayModal(${c.id})">المتبقي 💳</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
                     </tr>
@@ -477,11 +491,13 @@
                 paidTable.innerHTML += `
                     <tr>
                         <td><b>${c.name}</b></td>
+                        <td><span class="badge-info">${c.board || '-'}</span></td>
+                        <td><span class="badge-info">${c.breaker || '-'}</span></td>
                         <td>${c.amperes || '-'}</td>
                         <td style="color:#01B574; font-weight:bold;">${c.paidAmount}</td>
                         <td class="action-btns">
                             <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️</button>
-                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
                     </tr>
@@ -497,7 +513,7 @@
             const remaining = totalRequired - (parseFloat(cust.paidAmount) || 0);
 
             document.getElementById('payCustId').value = cust.id;
-            document.getElementById('payModalInfo').innerText = `المشترك: ${cust.name} | المطلوب الإجمالي: ${remaining} دينار`;
+            document.getElementById('payModalInfo').innerText = `المشترك: ${cust.name} (بورد: ${cust.board || '-'} / جوزة: ${cust.breaker || '-'}) | المطلوب: ${remaining} دينار`;
             document.getElementById('paidAmountInput').value = remaining;
             document.getElementById('payModal').style.display = 'flex';
         }
@@ -626,6 +642,7 @@ ${statusText}
 👤 *الاسم:* ${cust.name}
 📞 *الهاتف:* ${cust.phone || 'غير محدد'}
 🔢 *البورد/الجوزة:* ${cust.board || '-'}/${cust.breaker || '-'}
+⚡ *عدد الأمبيرات:* ${cust.amperes || '-'}
 💰 *المبلغ الواصل الآن:* ${recentlyPaid} دينار
 إجمالي المدفوع: ${cust.paidAmount} دينار
 📌 *المتبقي عليه:* ${remaining > 0 ? remaining + ' دينار' : 'لا يوجد (خالي الطرف)'}
