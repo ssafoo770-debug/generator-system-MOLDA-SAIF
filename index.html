@@ -371,7 +371,9 @@
 </div>
 
 <script>
-    let customers = JSON.parse(localStorage.getItem('generator_customers')) || [];
+    // تم بدء القائمة فارغة تماماً بناءً على طلبك
+    let customers = [];
+    saveCustomers();
 
     window.onload = function() {
         loadTheme();
@@ -464,6 +466,11 @@
     }
 
     function renderTables() {
+        const storedData = localStorage.getItem('generator_customers');
+        if(storedData) {
+            customers = JSON.parse(storedData);
+        }
+
         const unpaidTable = document.getElementById('unpaidTable');
         const partialTable = document.getElementById('partialTable');
         const paidTable = document.getElementById('paidTable');
@@ -474,13 +481,12 @@
         paidTable.innerHTML = '';
 
         customers.forEach(c => {
-            // تصفية البحث بالاسم أو البورد أو الجوزة
             const matchName = (c.name || '').toLowerCase().includes(searchQuery);
             const matchBoard = (c.board || '').toLowerCase().includes(searchQuery);
             const matchBreaker = (c.breaker || '').toLowerCase().includes(searchQuery);
 
             if (searchQuery && !matchName && !matchBoard && !matchBreaker) {
-                return; // تجريد العنصر إذا لم يطابق البحث
+                return;
             }
 
             const totalRequired = (parseFloat(c.amount) || 0) + (parseFloat(c.previousDebt) || 0);
