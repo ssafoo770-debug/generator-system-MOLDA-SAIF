@@ -12,17 +12,14 @@
             padding: 20px;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: auto;
             background: #fff;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        h2, h3 {
-            color: #333;
-            text-align: center;
-        }
+        h2, h3 { color: #333; text-align: center; }
         .card {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -31,28 +28,13 @@
             margin-bottom: 20px;
         }
         .form-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+            display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
         }
         input, select, button {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
         }
-        input {
-            flex: 1;
-            min-width: 140px;
-        }
-        button {
-            cursor: pointer;
-            border: none;
-            color: #fff;
-            font-weight: bold;
-            transition: 0.2s;
-        }
+        input { flex: 1; min-width: 130px; }
+        button { cursor: pointer; border: none; color: #fff; font-weight: bold; transition: 0.2s; }
         .btn-primary { background-color: #007bff; }
         .btn-primary:hover { background-color: #0056b3; }
         .btn-success { background-color: #28a745; }
@@ -65,61 +47,24 @@
         .btn-secondary:hover { background-color: #5a6268; }
         
         .tables-container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            display: flex; gap: 15px; flex-wrap: wrap;
         }
         .table-box {
-            flex: 1;
-            min-width: 340px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
+            flex: 1; min-width: 320px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #eee;
-            padding: 8px;
-            text-align: center;
-            font-size: 13px;
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #eee; padding: 8px; text-align: center; font-size: 13px; }
         th { background-color: #f1f3f5; }
         
-        .action-btns {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .reset-box {
-            text-align: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px dashed #dc3545;
-        }
+        .action-btns { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+        .reset-box { text-align: center; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #dc3545; }
 
-        /* Modal / نافذة التعديل */
+        /* Modal / نوافذ التعديل والتسديد */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
         }
-        .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-        }
+        .modal-content { background: #fff; padding: 20px; border-radius: 10px; width: 90%; max-width: 450px; }
     </style>
 </head>
 <body>
@@ -147,14 +92,14 @@
             <input type="text" id="custBoard" placeholder="رقم البورد">
             <input type="text" id="custBreaker" placeholder="رقم الجوزة">
             <input type="number" id="custAmperes" placeholder="عدد الأمبيرات">
-            <input type="number" id="custAmount" placeholder="المبلغ المطلوب">
+            <input type="number" id="custAmount" placeholder="المبلغ المطلوب للشهر">
             <button class="btn-primary" onclick="addCustomer()">إضافة</button>
         </div>
     </div>
 
     <!-- جداول المشتركين -->
     <div class="tables-container">
-        <!-- غير المسددين -->
+        <!-- ❌ غير المسددين -->
         <div class="table-box">
             <h3 style="color: #dc3545;">❌ قائمة غير المسددين</h3>
             <table>
@@ -162,7 +107,7 @@
                     <tr>
                         <th>الاسم</th>
                         <th>الأمبيرات</th>
-                        <th>المبلغ</th>
+                        <th>المبلغ المطلوب</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
@@ -170,7 +115,23 @@
             </table>
         </div>
 
-        <!-- المسددين -->
+        <!-- ⚠️ باقي عليهم حساب -->
+        <div class="table-box">
+            <h3 style="color: #e0a800;">⚠️ باقي عليهم حساب (واصل جزئي)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الواصل</th>
+                        <th>المتبقي</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="partialTable"></tbody>
+            </table>
+        </div>
+
+        <!-- ✅ المسددين بالكامل -->
         <div class="table-box">
             <h3 style="color: #28a745;">✅ قائمة المسددين</h3>
             <table>
@@ -178,18 +139,38 @@
                     <tr>
                         <th>الاسم</th>
                         <th>الأمبيرات</th>
-                        <th>المبلغ</th>
+                        <th>المبلغ المسدد</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="paidTable"></tbody>
             </table>
 
-            <!-- زر تصفير جميع المسددين -->
+            <!-- زر تصفير الشهر -->
             <div class="reset-box">
-                <button class="btn-danger" style="padding: 10px 20px; font-size: 15px;" onclick="resetAllPaid()">
-                    🔄 تصفير الشهر (إعادة جميع المسددين إلى غير مسددين)
+                <button class="btn-danger" style="padding: 10px 15px; font-size: 14px;" onclick="resetAllPaid()">
+                    🔄 تصفير الشهر (نقل المسددين وتبقية الديون لشهر جديد)
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة التسديد الدقيق (كامل أو جزئي) -->
+<div id="payModal" class="modal">
+    <div class="modal-content">
+        <h3>💳 تسديد حساب المشترك</h3>
+        <p id="payModalInfo" style="font-weight: bold; color: #007bff;"></p>
+        <input type="hidden" id="payCustId">
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label>المبلغ المدفوع حلياً (الواصل):
+                <input type="number" id="paidAmountInput" placeholder="أدخل المبلغ الواصل">
+            </label>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-success" style="flex: 1;" onclick="confirmPayment()">تأكيد التسديد 💾</button>
+                <button class="btn-secondary" style="flex: 1;" onclick="closePayModal()">إلغاء ❌</button>
             </div>
         </div>
     </div>
@@ -198,7 +179,7 @@
 <!-- نافذة التعديل (Modal) -->
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3>✏️️ تعديل بيانات المشترك</h3>
+        <h3>✏️ تعديل بيانات المشترك</h3>
         <input type="hidden" id="editCustId">
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <label>اسم المشترك: <input type="text" id="editName"></label>
@@ -206,7 +187,8 @@
             <label>رقم البورد: <input type="text" id="editBoard"></label>
             <label>رقم الجوزة: <input type="text" id="editBreaker"></label>
             <label>عدد الأمبيرات: <input type="number" id="editAmperes"></label>
-            <label>المبلغ المطلوب: <input type="number" id="editAmount"></label>
+            <label>مبلغ الشهر الحالي: <input type="number" id="editAmount"></label>
+            <label>ديون سابقة متبقية: <input type="number" id="editPreviousDebt"></label>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn-success" style="flex: 1;" onclick="saveCustomerEdit()">حفظ التعديلات 💾</button>
                 <button class="btn-secondary" style="flex: 1;" onclick="closeEditModal()">إلغاء ❌</button>
@@ -218,64 +200,55 @@
 <script>
     let customers = JSON.parse(localStorage.getItem('generator_customers')) || [];
 
-    // عند تحميل الصفحة تلقائياً
     window.onload = function() {
         loadTelegramSettings();
         renderTables();
     };
 
-    // حفظ إعدادات التليجرام في localStorage دائمياً
     function saveTelegramSettings() {
         const token = document.getElementById('botToken').value.trim();
         const chatId = document.getElementById('chatId').value.trim();
-
-        if(!token || !chatId) {
-            alert('يرجى ملء الخانتين أولاً!');
-            return;
-        }
-
+        if(!token || !chatId) { alert('يرجى ملء الخانتين أولاً!'); return; }
         localStorage.setItem('tg_bot_token', token);
         localStorage.setItem('tg_chat_id', chatId);
-
         const status = document.getElementById('settingsStatus');
-        status.innerText = "✅ تم حفظ التوكن والـ ID بنجاح! ولن ينمحوا عند إغلاق أو إعادة فتح البرنامج.";
+        status.innerText = "✅ تم حفظ التوكن والـ ID بنجاح!";
         setTimeout(() => status.innerText = "", 4000);
     }
 
-    // استرجاع الإعدادات عند فتح البرنامج
     function loadTelegramSettings() {
         const savedToken = localStorage.getItem('tg_bot_token');
         const savedChatId = localStorage.getItem('tg_chat_id');
-
         if(savedToken) document.getElementById('botToken').value = savedToken;
         if(savedChatId) document.getElementById('chatId').value = savedChatId;
     }
 
-    // إضافة مشترك جديد
     function addCustomer() {
         const name = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
         const board = document.getElementById('custBoard').value.trim();
         const breaker = document.getElementById('custBreaker').value.trim();
         const amperes = document.getElementById('custAmperes').value.trim();
-        const amount = document.getElementById('custAmount').value.trim();
+        const amount = parseFloat(document.getElementById('custAmount').value) || 0;
 
-        if(!name || !amount) {
-            alert('يرجى كتابة اسم المشترك والمبلغ على الأقل');
+        if(!name || amount <= 0) {
+            alert('يرجى كتابة اسم المشترك والمبلغ بشكل صحيح');
             return;
         }
 
         const newCust = {
             id: Date.now(),
-            name, phone, board, breaker, amperes, amount,
-            paid: false
+            name, phone, board, breaker, amperes,
+            amount: amount,
+            previousDebt: 0, // ديون سابقة
+            paidAmount: 0,   // الواصل
+            status: 'unpaid' // unpaid, partial, paid
         };
 
         customers.push(newCust);
         saveCustomers();
         renderTables();
 
-        // مسح الخانات
         document.getElementById('custName').value = '';
         document.getElementById('custPhone').value = '';
         document.getElementById('custBoard').value = '';
@@ -284,41 +257,58 @@
         document.getElementById('custAmount').value = '';
     }
 
-    // حفظ قائمة المشتركين
     function saveCustomers() {
         localStorage.setItem('generator_customers', JSON.stringify(customers));
     }
 
-    // عرض القوائم
     function renderTables() {
         const unpaidTable = document.getElementById('unpaidTable');
+        const partialTable = document.getElementById('partialTable');
         const paidTable = document.getElementById('paidTable');
 
         unpaidTable.innerHTML = '';
+        partialTable.innerHTML = '';
         paidTable.innerHTML = '';
 
         customers.forEach(c => {
-            if(!c.paid) {
+            const totalRequired = (parseFloat(c.amount) || 0) + (parseFloat(c.previousDebt) || 0);
+            const remaining = totalRequired - (parseFloat(c.paidAmount) || 0);
+
+            if(c.status === 'unpaid') {
+                let debtText = c.previousDebt > 0 ? `<br><small style="color:red;">(شامل دين سابق: ${c.previousDebt})</small>` : '';
                 unpaidTable.innerHTML += `
                     <tr>
                         <td>${c.name}</td>
                         <td>${c.amperes || '-'}</td>
-                        <td>${c.amount}</td>
+                        <td><b>${totalRequired}</b>${debtText}</td>
                         <td class="action-btns">
-                            <button class="btn-success" onclick="markAsPaid(${c.id})">تسديد 💳</button>
+                            <button class="btn-success" onclick="openPayModal(${c.id})">تسديد 💳</button>
+                            <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
+                            <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️️</button>
+                        </td>
+                    </tr>
+                `;
+            } else if(c.status === 'partial') {
+                partialTable.innerHTML += `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td style="color:green; font-weight:bold;">${c.paidAmount}</td>
+                        <td style="color:red; font-weight:bold;">${remaining}</td>
+                        <td class="action-btns">
+                            <button class="btn-success" onclick="openPayModal(${c.id})">دفع المتبقي 💳</button>
                             <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
                     </tr>
                 `;
-            } else {
+            } else if(c.status === 'paid') {
                 paidTable.innerHTML += `
                     <tr>
                         <td>${c.name}</td>
                         <td>${c.amperes || '-'}</td>
-                        <td>${c.amount}</td>
+                        <td style="color:green; font-weight:bold;">${c.paidAmount}</td>
                         <td class="action-btns">
-                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء التسديد ↩️</button>
+                            <button class="btn-secondary" onclick="markAsUnpaid(${c.id})">إلغاء ↩️</button>
                             <button class="btn-warning" onclick="openEditModal(${c.id})">تعديل ✏️</button>
                             <button class="btn-danger" onclick="deleteCustomer(${c.id})">🗑️</button>
                         </td>
@@ -328,44 +318,86 @@
         });
     }
 
-    // التحويل إلى مسدد وإرسال إشعار بالتليجرام
-    function markAsPaid(id) {
+    // فتح نافذة التسديد
+    function openPayModal(id) {
         const cust = customers.find(c => c.id === id);
         if(cust) {
-            cust.paid = true;
-            saveCustomers();
-            renderTables();
-            sendTelegramNotification(cust);
+            const totalRequired = (parseFloat(cust.amount) || 0) + (parseFloat(cust.previousDebt) || 0);
+            const remaining = totalRequired - (parseFloat(cust.paidAmount) || 0);
+
+            document.getElementById('payCustId').value = cust.id;
+            document.getElementById('payModalInfo').innerText = `المشترك: ${cust.name} | المطلوب الإجمالي: ${remaining} دينار`;
+            document.getElementById('paidAmountInput').value = remaining; // القيمة الافتراضية المبلغ كامل
+            document.getElementById('payModal').style.display = 'flex';
         }
     }
 
-    // إلغاء التسديد لمشترك واحد (إعادته إلى قائمة غير المسددين)
+    function closePayModal() {
+        document.getElementById('payModal').style.display = 'none';
+    }
+
+    // تأكيد التسديد
+    function confirmPayment() {
+        const id = parseInt(document.getElementById('payCustId').value);
+        const cust = customers.find(c => c.id === id);
+        const enteredPaid = parseFloat(document.getElementById('paidAmountInput').value) || 0;
+
+        if(!cust) return;
+
+        const totalRequired = (parseFloat(cust.amount) || 0) + (parseFloat(cust.previousDebt) || 0);
+        const previousPaid = parseFloat(cust.paidAmount) || 0;
+        const newTotalPaid = previousPaid + enteredPaid;
+
+        cust.paidAmount = newTotalPaid;
+
+        if(newTotalPaid >= totalRequired) {
+            cust.status = 'paid'; // تم التسديد بالكامل
+        } else {
+            cust.status = 'partial'; // واصل جزئي (باقي عليه حساب)
+        }
+
+        saveCustomers();
+        renderTables();
+        closePayModal();
+
+        // إرسال إشعار التليجرام
+        sendTelegramNotification(cust, enteredPaid, (totalRequired - newTotalPaid));
+    }
+
     function markAsUnpaid(id) {
         const cust = customers.find(c => c.id === id);
         if(cust) {
-            cust.paid = false;
+            cust.status = 'unpaid';
+            cust.paidAmount = 0;
             saveCustomers();
             renderTables();
         }
     }
 
-    // تصفير الشهر بالكامل (إعادة جميع المسددين إلى غير مسددين)
+    // تصفير الشهر الجديد (يحافظ على باقي الحساب والديون!)
     function resetAllPaid() {
-        const paidCount = customers.filter(c => c.paid).length;
-        if(paidCount === 0) {
-            alert('لا يوجد مشتركين في قائمة المسددين لتصفيرهم!');
-            return;
-        }
+        if(confirm('هل أنت تأكد من البدء بشهر جديد؟\n- المسددين بالكامل سيعودون لقائمة غير المسددين.\n- المشتركين الذين باقي عليهم حساب ستحول مبالغهم المتبقية كـ (ديون سابقة) تُضاف لحساب الشهر الجديد!')) {
+            customers.forEach(c => {
+                const totalRequired = (parseFloat(c.amount) || 0) + (parseFloat(c.previousDebt) || 0);
+                const remaining = totalRequired - (parseFloat(c.paidAmount) || 0);
 
-        if(confirm(`هل أنت تأكد من تصفير الشهر؟ سيتم تحويل ${paidCount} مشتركين من قائمة المسددين إلى قائمة غير المسددين لتبدأ شهراً جديداً.`)) {
-            customers.forEach(c => c.paid = false);
+                if(c.status === 'paid') {
+                    c.status = 'unpaid';
+                    c.paidAmount = 0;
+                    c.previousDebt = 0;
+                } else if(c.status === 'partial' || c.status === 'unpaid') {
+                    c.previousDebt = remaining; // ترحيل المتبقي كدين سابق
+                    c.paidAmount = 0;
+                    c.status = 'unpaid';
+                }
+            });
+
             saveCustomers();
             renderTables();
-            alert('تم تصفير القائمة بنجاح وإعادة جميع المشتركين إلى قائمة غير المسددين!');
+            alert('تم بدء شهر جديد بنجاح وتدوير كافة الديون المتبقية تلقائياً!');
         }
     }
 
-    // فتح نافذة التعديل وتعبئة البيانات
     function openEditModal(id) {
         const cust = customers.find(c => c.id === id);
         if(cust) {
@@ -375,17 +407,16 @@
             document.getElementById('editBoard').value = cust.board || '';
             document.getElementById('editBreaker').value = cust.breaker || '';
             document.getElementById('editAmperes').value = cust.amperes || '';
-            document.getElementById('editAmount').value = cust.amount || '';
+            document.getElementById('editAmount').value = cust.amount || 0;
+            document.getElementById('editPreviousDebt').value = cust.previousDebt || 0;
             document.getElementById('editModal').style.display = 'flex';
         }
     }
 
-    // إغلاق نافذة التعديل
     function closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
     }
 
-    // حفظ التعديلات على المشترك
     function saveCustomerEdit() {
         const id = parseInt(document.getElementById('editCustId').value);
         const cust = customers.find(c => c.id === id);
@@ -396,12 +427,8 @@
             cust.board = document.getElementById('editBoard').value.trim();
             cust.breaker = document.getElementById('editBreaker').value.trim();
             cust.amperes = document.getElementById('editAmperes').value.trim();
-            cust.amount = document.getElementById('editAmount').value.trim();
-
-            if(!cust.name || !cust.amount) {
-                alert('الاسم والمبلغ مطلوبان!');
-                return;
-            }
+            cust.amount = parseFloat(document.getElementById('editAmount').value) || 0;
+            cust.previousDebt = parseFloat(document.getElementById('editPreviousDebt').value) || 0;
 
             saveCustomers();
             renderTables();
@@ -409,7 +436,6 @@
         }
     }
 
-    // حذف مشترك
     function deleteCustomer(id) {
         if(confirm('هل أنت تأكد من حذف هذا المشترك؟')) {
             customers = customers.filter(c => c.id !== id);
@@ -418,30 +444,26 @@
         }
     }
 
-    // دالة إرسال الإشعار إلى التليجرام
-    function sendTelegramNotification(cust) {
+    function sendTelegramNotification(cust, recentlyPaid, remaining) {
         const token = localStorage.getItem('tg_bot_token');
         const chatId = localStorage.getItem('tg_chat_id');
 
-        if(!token || !chatId) {
-            alert('تحذير: لم يتم حفظ إعدادات التليجرام، لن يصلك إشعار!');
-            return;
-        }
+        if(!token || !chatId) return;
+
+        let statusText = remaining <= 0 ? "✅ *تسديد كامل*" : "⚠️ *تسديد جزئي (باقي عليه حساب)*";
 
         const message = `
-✅ *تم تسديد اشتراك جديد*
+${statusText}
 
 👤 *الاسم:* ${cust.name}
 📞 *الهاتف:* ${cust.phone || 'غير محدد'}
-🔢 *رقم البورد:* ${cust.board || '-'}
-🔌 *رقم الجوزة:* ${cust.breaker || '-'}
-⚡ *عدد الأمبيرات:* ${cust.amperes || '-'}
-💰 *المبلغ المسدد:* ${cust.amount} دينار
+🔢 *البورد/الجوزة:* ${cust.board || '-'}/${cust.breaker || '-'}
+💰 *المبلغ الواصل الآن:* ${recentlyPaid} دينار
+إجمالي المدفوع: ${cust.paidAmount} دينار
+📌 *المتبقي عليه:* ${remaining > 0 ? remaining + ' دينار' : 'لا يوجد (خالي الطرف)'}
         `;
 
-        const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-        fetch(url, {
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -449,12 +471,7 @@
                 text: message,
                 parse_mode: 'Markdown'
             })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(!data.ok) console.error("Telegram Error:", data);
-        })
-        .catch(err => console.error("Error:", err));
+        });
     }
 </script>
 
